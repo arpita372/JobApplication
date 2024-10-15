@@ -22,7 +22,7 @@ public class JobController {
 	private JobService jobService;
 	
 	@GetMapping
-	public ResponseEntity<List<Job>> findAll(){
+	public ResponseEntity<List<JobDTO>> findAll(){
 		return ResponseEntity.ok(jobService.findAll());
 	}
 	
@@ -33,9 +33,9 @@ public class JobController {
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Job> getJobById(@PathVariable Long id) {
+	public ResponseEntity<JobDTO> getJobById(@PathVariable Long id) {
 		
-		Job job=jobService.getJobById(id);
+		JobDTO job=jobService.getJobById(id);
 		if(job!=null)
 			return new ResponseEntity<>(job,HttpStatus.OK);
 		return new ResponseEntity<>(HttpStatus.NOT_FOUND);

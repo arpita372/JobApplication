@@ -2,6 +2,7 @@ package com.practice.jobms.job.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,12 @@ import org.springframework.stereotype.Service;
 import com.practice.jobms.job.Job;
 import com.practice.jobms.job.JobRepository;
 import com.practice.jobms.job.JobService;
+import com.practice.jobms.job.client.CompanyClient;
+import com.practice.jobms.job.client.ReviewClient;
+import com.practice.jobms.job.JobDTO;
+import com.practice.jobms.job.external.Company;
+import com.practice.jobms.job.external.Review;
+import com.practice.jobms.job.mapper.JobDtoMapper;
 
 
 @Service
@@ -17,19 +24,48 @@ public class JobServiceImpl implements JobService{
 	@Autowired
 	JobRepository jobRepository;
 	
+	//@Autowired
+	//RestTemplate restTemplate;
+	
+	@Autowired
+	CompanyClient companyClient;
+	
+	@Autowired
+	ReviewClient reviewClient;
+	
 	@Override
 	public void createJob(Job job) {
 		jobRepository.save(job);
 	}
 	
 	@Override
-	public List<Job> findAll() {
-		return jobRepository.findAll();
+	public List<JobDTO> findAll() {
+		
+		List<Job> jobs=jobRepository.findAll();
+		return jobs.stream().map(this::convertToDTO).collect(Collectors.toList());
+	}
+	
+	public JobDTO convertToDTO(Job job) {
+		/*
+		 * Company
+		 * company=restTemplate.getForObject("http://companyms:8081/companies/"+job.
+		 * getCompanyId(),Company.class); //ParameterizedTypeReference -enable class for
+		 * passing generic type ResponseEntity<List<Review>>
+		 * reviewResponse=restTemplate.exchange(
+		 * "http://reviewms:8083/reviews?companyId="+job.getCompanyId(), HttpMethod.GET,
+		 * null, new ParameterizedTypeReference<List<Review>>() { }); List<Review>
+		 * reviews=reviewResponse.getBody();
+		 */
+		Company company=companyClient.getCompany(job.getCompanyId());
+		List<Review> reviews=reviewClient.getReviews(job.getCompanyId());
+		JobDTO jobDTO=JobDtoMapper.mapTojobWithCompanyDTO(job, company, reviews);
+		return jobDTO;
 	}
 
 	@Override
-	public Job getJobById(Long id) {
-		return jobRepository.findById(id).orElse(null);
+	public JobDTO getJobById(Long id) {
+		 Job job=jobRepository.findById(id).orElse(null);
+		 return convertToDTO(job);
 	}
 
 	@Override

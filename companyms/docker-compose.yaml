@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
-
+  
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin_container
@@ -28,6 +28,15 @@ services:
     networks:
       - my_postgres
     restart: unless-stopped
+
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - my_postgres
 
 networks:
   my_postgres:
