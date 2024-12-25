@@ -1,5 +1,6 @@
 package com.practice.jobms.job.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,14 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.practice.jobms.job.Job;
+import com.practice.jobms.job.JobDTO;
 import com.practice.jobms.job.JobRepository;
 import com.practice.jobms.job.JobService;
 import com.practice.jobms.job.client.CompanyClient;
 import com.practice.jobms.job.client.ReviewClient;
-import com.practice.jobms.job.JobDTO;
 import com.practice.jobms.job.external.Company;
 import com.practice.jobms.job.external.Review;
 import com.practice.jobms.job.mapper.JobDtoMapper;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 
 @Service
@@ -38,12 +42,23 @@ public class JobServiceImpl implements JobService{
 		jobRepository.save(job);
 	}
 	
+	
+	
+	//@CircuitBreaker(name="companyBreaker",fallbackMethod="companyBreakerFallback")
 	@Override
+	@RateLimiter(name="companyBreaker",fallbackMethod="companyBreakerFallback")
 	public List<JobDTO> findAll() {
 		
 		List<Job> jobs=jobRepository.findAll();
 		return jobs.stream().map(this::convertToDTO).collect(Collectors.toList());
 	}
+	
+	public List<String> companyBreakerFallback(Exception e){
+		List<String> list=new ArrayList<>();
+		list.add("Dummy");
+		return list;
+	}
+	
 	
 	public JobDTO convertToDTO(Job job) {
 		/*

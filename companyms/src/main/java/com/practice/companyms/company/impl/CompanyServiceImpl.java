@@ -3,19 +3,27 @@ package com.practice.companyms.company.impl;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.practice.companyms.company.Company;
 import com.practice.companyms.company.CompanyRepository;
 import com.practice.companyms.company.CompanyService;
+import com.practice.companyms.company.clients.ReviewClient;
+import com.practice.companyms.company.dto.ReviewMessage;
+
+import jakarta.ws.rs.NotFoundException;
 
 @Service
 public class CompanyServiceImpl implements CompanyService{
 
-	@Autowired
 	private CompanyRepository companyRepository;
+	private ReviewClient reviewClient;
 	
+	public CompanyServiceImpl(CompanyRepository companyRepository, ReviewClient reviewClient) {
+		this.companyRepository = companyRepository;
+		this.reviewClient = reviewClient;
+	}
+
 	@Override
 	public List<Company> getAllCompanies() {
 		
@@ -54,6 +62,17 @@ public class CompanyServiceImpl implements CompanyService{
 	@Override
 	public Company getCompanyById(Long id) {
 		return companyRepository.findById(id).orElse(null);
+	}
+
+	@Override
+	public void updateCompanyRating(ReviewMessage reviewMessage) {
+		//System.out.println("Review message:"+reviewMessage.getDescription());
+		Company company=companyRepository.findById(reviewMessage.getCompanyId())
+				.orElseThrow(()->new NotFoundException("Company not found "+reviewMessage.getCompanyId()));
+		double averageRating=reviewClient.getAverageRatingForCompany(reviewMessage.getCompanyId());
+		company.setRating(averageRating);
+		companyRepository.save(company);
+				
 	}
 	
 	
